@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Button, Tabs, Table, Skeleton, Switch } from 'antd';
-import { getDeviceByType, getAllDeviceType, } from "./api.js";
+import { Button, Tabs, Table, Skeleton, Switch, Row, Col, Card, } from 'antd';
+import { getDeviceByType, getAllDeviceType, getNewestSurroundings, addSurroundings } from "./api.js";
 
 const TabPane = Tabs.TabPane;
 
@@ -17,6 +17,8 @@ class App extends Component {
             columnData: [],
             tableLoading: true,
             typeLoading: false,
+            surroundingsLoading: true,
+            surroundings: {},
         };
 
     }
@@ -24,9 +26,30 @@ class App extends Component {
     componentDidMount() {
         this.tableTimeout = setInterval(() => {
             this.refreshData();
-        }, 200);
+        }, 5000);
 
         this.getAllDeviceType();
+        addSurroundings()
+            .then((res) => {
+                console.log(res.data)
+            })
+            .catch((e) => {
+                if (e.response) {
+                    //请求已发出，服务器返回状态码不是2xx。
+                    console.info(e.response.data)
+                    console.info(e.response.status)
+                    console.info(e.response.headers)
+                } else if (e.request) {
+                    // 请求已发出，但没有收到响应
+                    // e.request 在浏览器里是一个XMLHttpRequest实例，
+                    // 在node中是一个http.ClientRequest实例
+                    console.info(e.request)
+                } else {
+                    //发送请求时异常，捕捉到错误
+                    console.info('error', e.message)
+                }
+                console.info(e.config)
+            });
     }
 
     componentWillUnmount() {
@@ -34,6 +57,9 @@ class App extends Component {
     }
 
     refreshData() {
+        this.setState({
+            tableLoading: true,
+        });
         getDeviceByType(this.state.currentType)
             .then((res) => {
                 let columnData = [];
@@ -54,6 +80,35 @@ class App extends Component {
                 this.setState({
                     columnData: columnData,
                     tableLoading: false,
+                });
+            })
+            .catch((e) => {
+                if (e.response) {
+                    //请求已发出，服务器返回状态码不是2xx。
+                    console.info(e.response.data)
+                    console.info(e.response.status)
+                    console.info(e.response.headers)
+                } else if (e.request) {
+                    // 请求已发出，但没有收到响应
+                    // e.request 在浏览器里是一个XMLHttpRequest实例，
+                    // 在node中是一个http.ClientRequest实例
+                    console.info(e.request)
+                } else {
+                    //发送请求时异常，捕捉到错误
+                    console.info('error', e.message)
+                }
+                console.info(e.config)
+            });
+
+
+        this.setState({
+            surroundingsLoading: true,
+        });
+        getNewestSurroundings()
+            .then((res) => {
+                this.setState({
+                    surroundings: res.data,
+                    surroundingsLoading: false,
                 });
             })
             .catch((e) => {
@@ -229,13 +284,137 @@ class App extends Component {
                     }} />
             </TabPane>
         );
-
+        let gridStyle = {
+            marginBottom: 24,
+        };
         return (
             <div
                 style={{
                     padding: '10px'
                 }}
             >
+                <Row gutter={24}>
+                    <Col span={8}>
+                        <Card
+                            style={gridStyle}
+                            bodyStyle={{
+                                height: 160,
+                                padding: '12px 16px',
+                                backgroundColor: 'rgb(233, 217, 211)',
+                            }}
+                            bordered={false}>
+                            <Skeleton loading={this.state.surroundingsLoading} active>
+                                <Row
+                                    style={{ height: '100%' }}
+                                    type="flex"
+                                    justify="space-around"
+                                    align="middle">
+                                    <Col span={6}>
+                                        <img className="charticon"
+                                            src={require("./img/光照.png")} />
+                                    </Col>
+                                    <Col span={18} style={{ width: 200 }}>
+                                        <Row style={{
+                                            fontSize: "20px",
+                                            fontWeight: "bold",
+                                            color: "#000",
+                                            textAlign: "center",
+                                        }}>
+                                            光照
+                                        </Row>
+                                        <Row style={{
+                                            fontSize: "30px",
+                                            fontWeight: "bold",
+                                            textAlign: "center",
+                                        }}>
+                                            {this.state.surroundings.light}
+                                        </Row>
+                                    </Col>
+                                </Row>
+                            </Skeleton>
+                        </Card>
+                    </Col>
+                    <Col span={8}>
+                        <Card
+                            style={gridStyle}
+                            bodyStyle={{
+                                height: 160,
+                                padding: '12px 16px',
+                                backgroundColor: 'rgb(210, 208, 223)',
+                            }}
+                            bordered={false}>
+                            <Skeleton loading={this.state.surroundingsLoading} active>
+                                <Row
+                                    style={{ height: '100%' }}
+                                    type="flex"
+                                    justify="space-around"
+                                    align="middle">
+                                    <Col span={6}>
+                                        <img className="charticon"
+                                            src={require("./img/温度.png")} />
+                                    </Col>
+                                    <Col span={18} style={{ width: 200 }}>
+                                        <Row style={{
+                                            fontSize: "20px",
+                                            fontWeight: "bold",
+                                            color: "#000",
+                                            textAlign: "center",
+                                        }}>
+                                            温度
+                                        </Row>
+                                        <Row style={{
+                                            fontSize: "30px",
+                                            fontWeight: "bold",
+                                            textAlign: "center",
+                                        }}>
+                                            {this.state.surroundings.temperature}
+                                        </Row>
+                                    </Col>
+                                </Row>
+                            </Skeleton>
+                        </Card>
+                    </Col>
+                    <Col span={8}>
+                        <Card
+                            style={gridStyle}
+                            bodyStyle={{
+                                height: 160,
+                                padding: '12px 16px',
+                                backgroundColor: 'rgb(207, 218, 213)',
+                            }}
+                            bordered={false}>
+                            <Skeleton loading={this.state.surroundingsLoading} active>
+                                <Row
+                                    style={{ height: '100%' }}
+                                    type="flex"
+                                    justify="space-around"
+                                    align="middle">
+                                    <Col span={6}>
+                                        <img className="charticon"
+                                            src={require("./img/烟尘.png")} />
+                                    </Col>
+                                    <Col span={18} style={{ width: 200 }}>
+                                        <Row style={{
+                                            fontSize: "20px",
+                                            fontWeight: "bold",
+                                            color: "#000",
+                                            textAlign: "center",
+                                        }}>
+                                            烟尘
+                                        </Row>
+                                        <Row style={{
+                                            fontSize: "30px",
+                                            fontWeight: "bold",
+                                            textAlign: "center",
+                                        }}>
+                                            {this.state.surroundings.smoke}
+                                        </Row>
+                                    </Col>
+                                </Row>
+                            </Skeleton>
+                        </Card>
+                    </Col>
+                </Row>
                 <Skeleton loading={this.state.typeLoading} active>
                     <Tabs
                         defaultActiveKey={this.state.currentType}
